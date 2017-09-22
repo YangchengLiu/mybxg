@@ -1,4 +1,4 @@
-define(['jquery', 'template', 'util','datepicker','language'], function ($, template, util) {
+define(['jquery', 'template', 'util', 'datepicker', 'language', 'validate', 'form'], function ($, template, util) {
     //获取URL中的参数
     var tcId = util.qs('tc_id');
     if (tcId) {
@@ -10,7 +10,7 @@ define(['jquery', 'template', 'util','datepicker','language'], function ($, temp
             dataType: 'json',
             success: function (data) {
                 //解析数据，渲染页面
-                data.result.operate='讲师编辑';
+                data.result.operate = '讲师编辑';
                 var html = template('teacherTpl', data.result);
                 $('#teacherInfo').html(html);
                 submitForm('/api/teacher/update');
@@ -18,24 +18,55 @@ define(['jquery', 'template', 'util','datepicker','language'], function ($, temp
         });
     } else {
         //添加操作
-        var html = template('teacherTpl',{operate:'讲师添加'});
+        var html = template('teacherTpl', {operate: '讲师添加'});
         $('#teacherInfo').html(html);
         submitForm('/api/teacher/add');
     }
-    //提交表单
-    function submitForm(url){
-        $('#teacherBtn').click(function () {
-            $.ajax({
-                type:'post',
-                url:url,
-                data:$('#teacherForm').serialize(),
-                dataType:'json',
-                success: function (data) {
-                    if(data.code==200){
-                        location.href='/teacher/list';
+    //基于表单验证插件和表单提交插件进行提交
+    function submitForm(url) {
+        $('#teacherForm').validate({
+            sendForm: false,
+            valid: function () {
+                //提交表单
+                $(this).ajaxSubmit({
+                    url: url,
+                    dataType: 'json',
+                    success: function (data) {
+                        if (data.code == 200) {
+                            location.href = '/teacher/list';
+                        }
                     }
+                });
+            },
+            description: {
+                tcName: {
+                    required: '用户名不能为空'
+                },
+                tcPass: {
+                    required: '密码不能为空',
+                    pattern: '必须是6位数字'
+                },
+                tcJoinDate: {
+                    required: '日期不能为空'
                 }
-            });
+            }
         });
     }
+
+    //提交表单
+    //function submitForm(url){
+    //    $('#teacherBtn').click(function () {
+    //        $.ajax({
+    //            type:'post',
+    //            url:url,
+    //            data:$('#teacherForm').serialize(),
+    //            dataType:'json',
+    //            success: function (data) {
+    //                if(data.code==200){
+    //                    location.href='/teacher/list';
+    //                }
+    //            }
+    //        });
+    //    });
+    //}
 });
